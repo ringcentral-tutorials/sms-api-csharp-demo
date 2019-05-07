@@ -28,12 +28,12 @@ Specify your app client id and client secret as well as account login credential
 #### How to send SMS
 Uncomment the function call below and run the app
 ```
-send_sms().Wait();
+//send_sms().Wait();
 ```
 #### How to send MMS
 Uncomment the function call below and run the app
 ```
-send_mms().Wait();
+//send_mms().Wait();
 ```
 #### How to track delivery status of messages
 Uncomment the function call below and run the app
