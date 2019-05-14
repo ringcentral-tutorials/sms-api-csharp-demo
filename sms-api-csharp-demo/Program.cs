@@ -9,7 +9,7 @@ namespace sms_api_csharp_demo
 {
     class Program
     {
-        const string RECIPIENT = "<ENTER PHONE NUMBER>";
+        const string RECIPIENT_PHONE_NUMBER = "<ENTER PHONE NUMBER>";
 
         const string RINGCENTRAL_CLIENTID = "<ENTER CLIENT ID>";
         const string RINGCENTRAL_CLIENTSECRET = "<ENTER CLIENT SECRET>";
@@ -34,7 +34,7 @@ namespace sms_api_csharp_demo
             {
                 var parameters = new CreateSMSMessage();
                 parameters.from = new MessageStoreCallerInfoRequest { phoneNumber = RINGCENTRAL_USERNAME };
-                parameters.to = new MessageStoreCallerInfoRequest[] { new MessageStoreCallerInfoRequest { phoneNumber = RECIPIENT } };
+                parameters.to = new MessageStoreCallerInfoRequest[] { new MessageStoreCallerInfoRequest { phoneNumber = RECIPIENT_PHONE_NUMBER } };
                 parameters.text = "This is a test message from C#";
 
                 var resp = await rc.Restapi().Account().Extension().Sms().Post(parameters);
@@ -49,7 +49,7 @@ namespace sms_api_csharp_demo
             {
                 var parameters = new CreateSMSMessage();
                 parameters.from = new MessageStoreCallerInfoRequest { phoneNumber = RINGCENTRAL_USERNAME };
-                parameters.to = new MessageStoreCallerInfoRequest[] { new MessageStoreCallerInfoRequest { phoneNumber = RECIPIENT } };
+                parameters.to = new MessageStoreCallerInfoRequest[] { new MessageStoreCallerInfoRequest { phoneNumber = RECIPIENT_PHONE_NUMBER } };
                 parameters.text = "This is a test message from C#";
                 var attachment = new Attachment { fileName = "test.jpg", contentType = "image/jpeg", bytes = File.ReadAllBytes("test.jpg") };
                 var attachments = new Attachment[] { attachment };
