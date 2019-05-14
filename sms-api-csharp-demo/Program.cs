@@ -55,10 +55,10 @@ namespace sms_api_csharp_demo
                 var attachments = new Attachment[] { attachment };
                 var resp = await rc.Restapi().Account().Extension().Sms().Post(parameters, attachments);
                 Console.WriteLine("MMS sent. Message status: " + resp.messageStatus);
-                //track_mms(rc, resp.id, resp.messageStatus).Wait();
+                //track_status(rc, resp.id, resp.messageStatus).Wait();
             }
         }
-        static private async Task track_mms(RestClient rc, String messageId, String messageStatus)
+        static private async Task track_status(RestClient rc, String messageId, String messageStatus)
         {
             while(messageStatus == "Queued")
             {
@@ -78,7 +78,7 @@ namespace sms_api_csharp_demo
                 requestParams.readStatus = new string[] { "Unread" };
                 var resp = await rc.Restapi().Account().Extension().MessageStore().List(requestParams);
                 int count = resp.records.Length;
-                Console.WriteLine(String.Format("Get get a list of {0} messages.", count));
+                Console.WriteLine(String.Format("Retrieving a list of {0} messages.", count));
                 foreach (var record in resp.records)
                 {
                     var messageId = record.id;
@@ -87,6 +87,7 @@ namespace sms_api_csharp_demo
                     var result = await rc.Restapi().Account().Extension().MessageStore(messageId).Put(updateRequest);
                     var readStatus = result.readStatus;
                     Console.WriteLine("Message status has been changed to " + readStatus);
+                    break;
                 }
             }
         }
@@ -119,20 +120,43 @@ namespace sms_api_csharp_demo
                 {
                     var eventFilters = new[]
                     {
-                        "/restapi/v1.0/account/~/extension/~/message-store/instant?type=SMS"
+                        "/restapi/v1.0/account/~/extension/~/message-store/instant?type=SMS",
+                        "/restapi/v1.0/account/~/extension/~/voicemail",
                     };
 
                     var subscription = new Subscription(rc, eventFilters, message =>
                     {
                         dynamic jsonObj = JObject.Parse(message);
-                        String senderNumber = jsonObj["body"]["from"]["phoneNumber"];
-                        var parameters = new CreateSMSMessage();
-                        parameters.from = new MessageStoreCallerInfoRequest { phoneNumber = RINGCENTRAL_USERNAME };
-                        parameters.to = new MessageStoreCallerInfoRequest[] { new MessageStoreCallerInfoRequest { phoneNumber = senderNumber } };
-                        parameters.text = "This is an automatic reply";
-                        var resp = rc.Restapi().Account().Extension().Sms().Post(parameters);
-                        Console.WriteLine("Send reply message");
-                        waitLoop = false;
+                        if (jsonObj.event.Contains("/message-store/instant")){
+                          Console.WriteLine("Recieved message from: " + jsonObj["body"]["from"]["phoneNumber"]);
+                          String senderNumber = jsonObj["body"]["from"]["phoneNumber"];
+                          var parameters = new CreateSMSMessage();
+                          parameters.from = new MessageStoreCallerInfoRequest { phoneNumber = RINGCENTRAL_USERNAME };
+                          parameters.to = new MessageStoreCallerInfoRequest[] { new MessageStoreCallerInfoRequest { phoneNumber = senderNumber } };
+                          parameters.text = "This is an automatic reply. Thank you for your message!";
+                          var resp = rc.Restapi().Account().Extension().Sms().Post(parameters);
+                          Console.WriteLine("Send replied message");
+                          waitLoop = false;
+                        }
+                        else if (jsonObj.event.Contains("/voicemail"))
+                        {
+                          Console.WriteLine(jsonObj['body'])
+                          if (jsonObj["body"]["from"] != null){
+                            Console.WriteLine("Recieved a voicemail from: " + jsonObj["body"]["from"]["phoneNumber"]);
+                            String senderNumber = jsonObj["body"]["from"]["phoneNumber"];
+                            var parameters = new CreateSMSMessage();
+                            parameters.from = new MessageStoreCallerInfoRequest { phoneNumber = RINGCENTRAL_USERNAME };
+                            parameters.to = new MessageStoreCallerInfoRequest[] { new MessageStoreCallerInfoRequest { phoneNumber = senderNumber } };
+                            parameters.text = "This is an automatic reply. Thank you for your voice message! I will get back to you asap.";
+                            var resp = rc.Restapi().Account().Extension().Sms().Post(parameters);
+                            Console.WriteLine("Send replied message");
+                            waitLoop = false;
+                          }
+                        }
+                        else
+                        {
+                          Console.WriteLine("Not an event we are waiting for.")
+                        }
                     });
 
                     var subscriptionInfo = await subscription.Subscribe();

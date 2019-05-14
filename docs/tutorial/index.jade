@@ -1,47 +1,3 @@
-style.
-  ul {
-    list-style-type: disc;
-    list-style-position: inside;
-  }
-  ol {
-    list-style-type: decimal;
-    list-style-position: inside;
-  }
-  #viewsaurus menu, #viewsaurus ol, #viewsaurus ul {
-      padding: 0 0 0 15px;
-  }
-  #viewsaurus .saurus-prose {
-    width: 40%;
-  }
-  #viewsaurus .saurus-code {
-    left: 40%;
-  }
-  #viewsaurus .saurus-prose a.btn,
-  #viewsaurus .saurus-prose a.btn:visited {
-    color: #fff;
-  }
-  .btn:visited,
-  .btn {
-    color: #fff;
-    background-color: #007bff;
-    border-color: #007bff;
-    display: inline-block;
-    font-weight: 400;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    border: 1px solid transparent;
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    border-radius: .25rem;
-    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-  }
-
 .chapter(data-title='SMS Application Walkthrough')
   .step(data-title='Welcome!', data-file='../README.MD', data-highlight='11-61')
     h2 Welcome to SMS Application Walk-through
@@ -53,7 +9,7 @@ style.
         li How to send an MMS message
         li How to track the delivery state of a message.
         li How to modify the message's read status.
-        li How to delete messages.
+        li How to delete a message.
         li How to receive and reply to an SMS message.
 
     h3 Other Languages
@@ -141,19 +97,21 @@ style.
 
       The maximum size for MMS is carrier-dependent and normally around 1.2MB to 1.4MB.
 
+      You can send multiple attachments in a single MMS message. But the total size of attachments should not exceed the size limit above!
+
   .step(data-title='Track the delivery', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='58,61-70')
     :markdown
       ## Track the delivery status of a message
 
       It takes some time for the system to send and deliver a message to a recipient. The delivery status of a particular message can be tracked using the __message-store__ endpoint.
 
-      After sending the MMS message in the previous step, we call the `track_mms()` method, passing along the instance of the SDK, the `messageId` and the `messageStatus`.
+      After sending the MMS message in the previous step, we call the `track_status()` method, passing along the instance of the SDK, the `messageId` and the `messageStatus`.  We'll use the `messageId` to identify the message we want to track the delivery status.
 
-      Inside the `track_mms()` method, we implement a while loop and check if the `mesasgeStatus` value is equal to "Queued", we cause a second delay then call the `MessageStore(id).Get()` method to read and print out the latest delivery status of the message.
+      Inside the `track_status()` method, we implement a while loop and check if the `mesasgeStatus` value is equal to "Queued", we cause a second delay then call the `MessageStore(id).Get()` method to read and print out the latest delivery status of the message.
 
-      Let's try it out. Uncomment the line `//track_mms(rc, resp.id, resp.messageStatus).Wait();` then run the app again.
+      Let's try it out. Uncomment the line `//track_status(rc, resp.id, resp.messageStatus).Wait();` then run the app again.
 
-  .step(data-title='Modify the message history', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='71-92')
+  .step(data-title='Change the message read status', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='71-92')
     :markdown
       ### Change the message read status
 
@@ -163,13 +121,13 @@ style.
 
       To read the metadata of recent messages from the user's message store, we create an instance of the `ListMessagesParameters` object, set the `requestParams.readStatus` to "Unread" so we retrieve only recent unread messages from the message store. Then we call the `MessageStore().List(requestParams);`
 
-      The JSON response `resp` contains an array or records. We iterate thru the records array, read the message id, create and instance of the `UpdateMessageRequest` object and set the `updateRequest.readStatus` to "Read". Then we call the `MessageStore(messageId).Put(updateRequest);` to change the `readStatus` of that message.
+      The JSON response `resp` contains an array of records. We iterate thru the records array, read the message id, create and instance of the `UpdateMessageRequest` object and set the `updateRequest.readStatus` to "Read". Then we call the `MessageStore(messageId).Put(updateRequest);` to change the `readStatus` of that message.
 
       Let's try it out. Go to the Main function and uncomment the line `//retrieve_modify().Wait();` then run the app.
 
       ### Specify other request parameters
 
-      You can set other request parameters such as the `requestParams.dateFrom` and `requestParams.dateTo` to retrieve messages created within the specified date and time period.
+      You can set other request parameters such as the `dateFrom` and `dateTo` to retrieve messages created within the specified date and time period. The default date and time period is the current time minus 24 hours.
 
   .step(data-title='Delete messages', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='93-111')
     :markdown
@@ -179,9 +137,11 @@ style.
 
       Similar to the previous step, we retrieve recent messages using the `readStatus` filter but this time, we read those messages which have the `readStatus` as "Read".
 
-      Then we iterate thru the records array, read the message id, and call the `MessageStore(messageId).Delete();` to delete the message.
+      Then, we iterate thru the `records` array, read the message id, and call the `MessageStore(messageId).Delete();` to delete the message.
 
       Let's try it out. Go to the Main function and uncomment the line `//retrieve_delete().Wait();` then run the app.
+
+      If you want to delete all the messages from the `records` array, comment out the __break__ line.
 
 .chapter(data-title='Replying to SMS messages')
   .step(data-title='Replying to SMS messages', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='112-155')
