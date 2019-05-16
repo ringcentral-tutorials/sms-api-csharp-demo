@@ -78,7 +78,7 @@
 
       We follow the same step to create an instance of the RingCentral.Net SDK `RestClient`, call the `Authorize` method and check the access token before sending a message.
 
-      In addition to specifying the `from`, `to` and the `text` query parameters, we create an `attachment` to hold the binary content and add the `attachments` to an array. This means that we can send multiple attachments in a single MMS message.
+      In addition to specifying the `from`, the `to` and the `text` query parameters, we create an `attachment` to hold the binary content and add the `attachments` to an array. This means that we can send multiple attachments in a single MMS message.
 
       Finally, we call the `rc.Restapi().Account().Extension().Sms().Post(parameters, attachments);` method to send the message.
 
@@ -111,7 +111,7 @@
 
       Let's try it out. Uncomment the line `//track_status(rc, resp.id, resp.messageStatus).Wait();` then run the app again.
 
-  .step(data-title='Change the message read status', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='71-92')
+  .step(data-title='Change the message read status', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='71-93')
     :markdown
       ### Change the message read status
 
@@ -129,7 +129,7 @@
 
       You can set other request parameters such as the `dateFrom` and `dateTo` to retrieve messages created within the specified date and time period. The default date and time period is the current time minus 24 hours.
 
-  .step(data-title='Delete messages', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='93-111')
+  .step(data-title='Delete messages', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='94-112')
     :markdown
       ### Delete messages
 
@@ -143,38 +143,57 @@
 
       If you want to delete all the messages from the `records` array, comment out the __break__ line.
 
-.chapter(data-title='Replying to SMS messages')
-  .step(data-title='Replying to SMS messages', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='112-155')
+.chapter(data-title='Receive - Reply to SMS messages')
+  .step(data-title='Receiving SMS messages', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='113-143')
     :markdown
-      In this step, you will learn how to listen to incoming SMS message, then reply with an SMS message to the sender of that incoming message.
+      In this step, you will learn how to listen to incoming SMS messages and new voicemail message, then reply with an SMS message to the sender of that incoming message or incoming call.
 
-      ### Listen to incoming SMS messages
+      ### Listen to incoming SMS messages and new voicemail messages
 
       Let's implement the `receive_reply()` method.
 
       We follow the same step to create an instance of the RingCentral.Net SDK `RestClient`, call the `Authorize` method and check the access token before moving on to execute the codes.
 
-      First, we create an `eventFilters` array and add the filter "/restapi/v1.0/account/~/extension/~/message-store/instant?type=SMS" to receive SMS messages.
+      First, we create an `eventFilters` array and add the following filters to the array:
 
-      Then we create an instance of the `Subscription` object as shown on the right-hand side pane.
+      - "/account/~/extension/~/message-store/instant?type=SMS": for receiving incoming SMS notifications.
+      - "/account/~/extension/~/voicemail": for receiving new voicemail notifications.
+
+      As you can see, we can specify multiple event notifications in a single subscription to get notified for different types of events without the need of creating multiple subscriptions.
+
+      Then, we create an instance of the `Subscription` object, passing along the `rc` and the `eventFilters` parameters. The last parameter is a callback function which will be called every time we receive a notification of the event we subscribed for. Within the callback function, we will call the `reply_sms_message()` method, which will be implemented in the next step.
 
       Next, we call the `subscription.Subscribe()` method to register for the event notification.
 
-      We also create a while loop to keep the process running so we can test the demo app. We use the `waitLoop` flag to terminate the process once we receive and reply a message.
+      We also create a while loop to keep the process running so we can test the demo app. We use the `waitLoop` flag to terminate the process when we set its value to __false__.
 
-      ### Replying to an SMS message
+      ### Subscription limitations
 
-      When there is an incoming SMS message, we will receive the notification of an incoming SMS message via the callback "message =>" function specified when we created the `Subscription` object. We load the `message` into a JSON object then parse the sender phone number.
+      Each account can register up to maximum 20 subscriptions. Therefore, using multiple event notifications in a subscription, when possible, will help overcome the limitation.
 
-      Then finally, we create and send a reply message to the `senderNumber`.
-
-      Let's try it out. Go to the Main function and uncomment the line `//receive_reply().Wait();` then run the app.
+      Active subscriptions will expire. The `subscription` object created by the SDK will renew the subscription automatically on your behalf as long as your app is still logged in and the platform refresh token is still valid.
 
       ### PubNub Notification Alternative
 
       The subscription we created above uses [PubNub](https://www.pubnub.com/).
 
-      There is also a [WebHook way to do subscription](https://developers.ringcentral.com/guide/notifications/quick-start/webhook/c-sharp). We won't dive into detail here. You can click the link to read more.
+      There is also a [WebHook way to do subscription](https://developers.ringcentral.com/guide/notifications/quick-start/webhook/csharp). We won't dive into detail here. You can click the link to read more.
+
+  .step(data-title='Replying with a SMS message', data-file='../sms-api-csharp-demo/Program.cs', data-highlight='144-183')
+    :markdown
+      ## Replying with an SMS message
+
+      When there is an incoming SMS message or a new voicemail, we call the `replySMSMessage()` function, passing along the `rc` and the `message` objects.
+
+      As we registered for multiple event notifications, we need to detect which event notification was triggered before we take an action on the notification.
+
+      We simply check the `jsonObj["event"]` value to see if it contains the name of the event type we've registered for.
+
+      In this tutorial, if it is the "/message-store/instant" or the "/voicemail", we parse the message body to get the sender's phone number, and we compose a message then send the message to the `senderNumber`.
+
+      Let's try it out. Go to the Main function and uncomment the line `//receive_reply().Wait();` then run the app.
+
+      If you don't want to terminate the process after receiving and replying a message, comment out the `waitLoop = false` line.
 
       ## Congratulations!
 
