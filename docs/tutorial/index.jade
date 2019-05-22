@@ -78,7 +78,7 @@
 
       We follow the same step to create an instance of the RingCentral.Net SDK `RestClient`, call the `Authorize` method and check the access token before sending a message.
 
-      In addition to specifying the `from`, the `to` and the `text` query parameters, we create an `attachment` to hold the binary content and add the `attachments` to an array. This means that we can send multiple attachments in a single MMS message.
+      In addition to specifying the `from`, the `to` and the `text` query parameters, we create an `attachment` to hold the binary content and add the `attachment` to the `attachments` array. This means that we can send multiple attachments in a single MMS message.
 
       Finally, we call the `rc.Restapi().Account().Extension().Sms().Post(parameters, attachments);` method to send the message.
 
