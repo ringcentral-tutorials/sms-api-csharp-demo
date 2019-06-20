@@ -24,7 +24,7 @@ namespace sms_api_csharp_demo
             //send_mms().Wait();
             //retrieve_modify().Wait();
             //retrieve_delete().Wait();
-            //receive_reply().Wait();
+            receive_reply().Wait();
         }
         static private async Task send_sms()
         {
